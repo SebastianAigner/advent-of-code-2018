@@ -33,7 +33,7 @@ fun commonSubstring(a: String, b: String): String {
 }
 
 fun hasExactlyNumOfAKind(id: String, num: Int): Boolean {
-    return id.groupBy { it }.mapValues { it.value.count() }.any { it.value == num }
+    return id.groupingBy { it }.eachCount().any { it.value == num }
 }
 
 fun hammingDistance(a: String, b: String): Int {
