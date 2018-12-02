@@ -28,11 +28,12 @@ fun partTwo(): Int {
     val encounteredFrequencies = mutableSetOf<Int>()
     val ints = CircularList(getInts())
     var ctr = 0
-    for (f in ints) {
-        ctr += f
+    val iterator = ints.iterator()
+    while(iterator.hasNext()) {
+        ctr += iterator.next()
         if(ctr in encounteredFrequencies) return ctr else encounteredFrequencies += ctr
     }
-    throw RuntimeException("Unreachable") // this is not nice, but required to guarantee a return value for the compiler.
+    error("Unreachable")
 }
 
 class CircularList<T>(val list: List<T>): Iterable<T> {
