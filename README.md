@@ -5,4 +5,4 @@ In this repository, you will find my solutions for the [Advent of Code 2018](htt
 
 I have decided that my main implementation language will be Kotlin this year.
 
-You can find the individual days in the corresponding folders in `/src/main/kotlin/dayXX`.
+You can find the individual days in the corresponding folders in `/src/main/kotlin/dayXX` or by [clicking here](https://github.com/SebastianAigner/advent-of-code-2018/tree/master/src/main/kotlin).
