@@ -52,7 +52,7 @@ class Sheet {
     }
 
     fun inchesMulticlaimed(): Int {
-        return claimedSquares.count { it.value > 0 }
+        return claimedSquares.count { it.value > 1 }
     }
 
     fun checkHasOverlap(c: Claim): Boolean {
