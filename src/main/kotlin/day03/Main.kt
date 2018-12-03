@@ -44,25 +44,21 @@ class Sheet {
     fun claim(c: Claim) {
         for(x in 0 until c.width) {
             for(y in 0 until c.height) {
-                val coords = Pair(x + c.left, y + c.top)
-                val claims = claimedSquares.getOrDefault(coords, 0) + 1
-                claimedSquares[coords] = claims
+                claimedSquares.compute(Pair(x + c.left, y + c.top)) { _, b ->
+                    (b ?: 0) + 1
+                }
             }
         }
     }
 
     fun inchesMulticlaimed(): Int {
-        return claimedSquares.filterValues { it > 1 }.count()
+        return claimedSquares.count { it.value > 0 }
     }
 
     fun checkHasOverlap(c: Claim): Boolean {
         for(x in 0 until c.width) {
             for(y in 0 until c.height) {
-                val coords = Pair(x + c.left, y + c.top)
-                val claims = claimedSquares[coords]
-                if(claims != 1) {
-                    return true
-                }
+                if(claimedSquares[Pair(x + c.left, y + c.top)] != 1) return true
             }
         }
         return false

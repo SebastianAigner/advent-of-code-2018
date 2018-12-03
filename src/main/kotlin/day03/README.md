@@ -9,6 +9,8 @@ The input is a little bit more complicated, which is a great excuse to use [Rege
 
 For each rectangle, we simply keep track of how many times it has been claimed on a sheet. I did this via a map. Finding the parts that are claimed multiple times is as easy as counting the number of map entries that have more than one claim.
 
+Instead of manually taking, modifying and reassigning values in the map, we can make use of the [Compute](https://docs.oracle.com/javase/8/docs/api/java/util/Map.html#compute-K-java.util.function.BiFunction-) functionality provided to us by Java while still profiting from simple Kotlin syntax.
+
 ## Part 2 (abridged)
 `What is the ID of the only claim that doesn't overlap?`
 
