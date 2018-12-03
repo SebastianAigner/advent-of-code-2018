@@ -1,4 +1,4 @@
-# Day 1
+# Day 2
 (from https://adventofcode.com/2018/day/2)
 
 ## Part 1 (abridged)
