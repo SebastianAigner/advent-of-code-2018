@@ -10,20 +10,19 @@ fun main(args: Array<String>) {
 }
 
 fun parseInput(): List<LogbookEntry> {
-    val reg = "\\[1518-(\\d+)-(\\d+) (\\d+):(\\d+)\\] (.+)".toRegex()
+    val reg = "\\[1518-(\\d+)-(\\d+) (\\d+):(\\d+)] (.+)".toRegex()
     return FileHelper.readFile("04.txt").filter { it.isNotEmpty() }.map {
-        reg.matchEntire(it)?.destructured?.let {
-            (mo,d,h,mi,b) ->
+        reg.matchEntire(it)?.destructured?.let { (mo, d, h, mi, b) ->
             LogbookEntry(mo.toInt(), d.toInt(), h.toInt(), mi.toInt(), b)
         } ?: error("Malformatted Input")
-    }.sortedWith(compareBy({ it.month }, { it.day }, { it.hour }, { it.minute } ))
+    }.sortedWith(compareBy({ it.month }, { it.day }, { it.hour }, { it.minute }))
 }
 
 fun partOne() {
     var currentGuard: Int? = null
     var asleepAt: LocalDateTime? = null
-    for(entry in parseInput()) {
-        when(val mb = entry.getMessageBody()) {
+    for (entry in parseInput()) {
+        when (val mb = entry.getMessageBody()) {
             is ShiftMessage -> {
                 currentGuard = mb.guardId
             }
@@ -31,8 +30,14 @@ fun partOne() {
                 asleepAt = LocalDateTime.of(1518, entry.month, entry.day, entry.hour, entry.minute)
             }
             is WakeMessage -> {
-                val asleepTill = LocalDateTime.of(2018, entry.month, entry.day, entry.hour, entry.minute-1) // since they are already counted as awake.
-                if(currentGuard != null && asleepAt != null) {
+                val asleepTill = LocalDateTime.of(
+                    2018,
+                    entry.month,
+                    entry.day,
+                    entry.hour,
+                    entry.minute - 1
+                ) // since they are already counted as awake.
+                if (currentGuard != null && asleepAt != null) {
                     Timetable.logSleep(currentGuard, asleepAt, asleepTill)
                 }
             }
@@ -56,7 +61,7 @@ object Timetable {
 
     fun getMostSleepingGuard(): Int { //returns the ID of the elf.
         println(sleepTimes)
-        val most =  sleepTimes.toList().sortedByDescending { a ->
+        val most = sleepTimes.toList().sortedByDescending { a ->
             val sleeptimes = a.second
             val seconds = sleeptimes.map {
                 val secondsAsleep = it.first.until(it.second, ChronoUnit.SECONDS)
@@ -78,7 +83,7 @@ object Timetable {
                     (cnt ?: 0) + 1
                 }
                 timeCtr = timeCtr.plusMinutes(1)
-            } while(timeCtr <= endTime)
+            } while (timeCtr <= endTime)
         }
         val top = minutes.toList().maxBy { it.second }
         return top ?: error("broken")
@@ -108,8 +113,8 @@ data class LogbookEntry(val month: Int, val day: Int, val hour: Int, val minute:
     fun shift() = shiftReg.matchEntire(body)?.destructured?.let { (i) -> i.toInt() }
 
     fun getMessageBody(): MessageBody {
-        if(sleepReg.containsMatchIn(body)) return SleepMessage
-        if(wakeReg.containsMatchIn(body)) return WakeMessage
+        if (sleepReg.containsMatchIn(body)) return SleepMessage
+        if (wakeReg.containsMatchIn(body)) return WakeMessage
         shift()?.let {
             return ShiftMessage(it)
         }
@@ -117,6 +122,6 @@ data class LogbookEntry(val month: Int, val day: Int, val hour: Int, val minute:
 }
 
 sealed class MessageBody
-class ShiftMessage(val guardId: Int): MessageBody()
+class ShiftMessage(val guardId: Int) : MessageBody()
 object SleepMessage : MessageBody()
 object WakeMessage : MessageBody()
