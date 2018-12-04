@@ -23,32 +23,35 @@ fun partOne() {
     var currentGuard: Int? = null
     var asleepAt: LocalDateTime? = null
     for(entry in parseInput()) {
-        when(val x = entry.getMessageBody()) {
+        when(val mb = entry.getMessageBody()) {
             is ShiftMessage -> {
-                currentGuard = x.guardId
+                currentGuard = mb.guardId
             }
             is SleepMessage -> {
                 asleepAt = LocalDateTime.of(1518, entry.month, entry.day, entry.hour, entry.minute)
             }
             is WakeMessage -> {
-                val asleepTill = LocalDateTime.of(2018, entry.month, entry.day, entry.hour, entry.minute-1) //todo: since they are already counted as awake.
-                Timetable.logSleep(currentGuard ?: error("no guard."), asleepAt ?: error("never fell asleep."), asleepTill)
+                val asleepTill = LocalDateTime.of(2018, entry.month, entry.day, entry.hour, entry.minute-1) // since they are already counted as awake.
+                if(currentGuard != null && asleepAt != null) {
+                    Timetable.logSleep(currentGuard, asleepAt, asleepTill)
+                }
             }
         }
     }
     val sleepyGuard = Timetable.getMostSleepingGuard()
-    println("Most sleepy: $sleepyGuard")
-    Timetable.findMostSleptMinute(sleepyGuard)
+    val ret = Timetable.findMostSleptMinute(sleepyGuard)
+    println("Most slept: #$sleepyGuard @ $ret")
 }
 
 fun partTwo() = Timetable.mostFrequentMinuteChecksum()
 
 object Timetable {
-    val sleepTimes = mutableMapOf<Int, MutableList<Pair<LocalDateTime, LocalDateTime>>>()
-    fun logSleep(id: Int, asleepAt: LocalDateTime, asleepTill: LocalDateTime) {
-        val thing = sleepTimes.getOrDefault(id, mutableListOf())
-        thing += Pair(asleepAt, asleepTill)
-        sleepTimes[id] = thing
+    private val sleepTimes = mutableMapOf<Int, MutableList<Pair<LocalDateTime, LocalDateTime>>>()
+
+    fun logSleep(id: Int, at: LocalDateTime, till: LocalDateTime) {
+        sleepTimes.compute(id) { _, b ->
+            (b ?: mutableListOf()).apply { add(Pair(at, till)) }
+        }
     }
 
     fun getMostSleepingGuard(): Int { //returns the ID of the elf.
@@ -61,39 +64,33 @@ object Timetable {
             }.sum()
             seconds
         }.firstOrNull()
-        println("shleepyboi" + most)
-        return most?.first ?: error("not found")
+        return most?.first ?: error("No guard that has slept the most.")
     }
 
     fun findMostSleptMinute(id: Int): Pair<Pair<Int, Int>, Int> {
-        val l = sleepTimes[id] ?: error("damn")
+        val l = sleepTimes[id] ?: error("Guard #$id does not exist.")
         val minutes = mutableMapOf<Pair<Int, Int>, Int>() // (h,m) -> cnt
         l.forEach {
-            val currentTime = it.first.toLocalTime()
             val endTime = it.second.toLocalTime()
-            var timeCtr = currentTime
+            var timeCtr = it.first.toLocalTime()
             do {
-                minutes.compute(Pair(timeCtr.hour, timeCtr.minute)) {
-                    _, b ->
-                    (b ?: 0) + 1
+                minutes.compute(Pair(timeCtr.hour, timeCtr.minute)) { _, cnt ->
+                    (cnt ?: 0) + 1
                 }
                 timeCtr = timeCtr.plusMinutes(1)
-                println(timeCtr)
             } while(timeCtr <= endTime)
-            println("done with one mapping.")
         }
-        println("Sleepmaster: $minutes")
         val top = minutes.toList().maxBy { it.second }
-        println(
-            "top shit: $top"
-        )
         return top ?: error("broken")
     }
 
     fun mostFrequentMinuteChecksum(): Int {
-        val stuff = sleepTimes.keys.map {
-            Pair(it, findMostSleptMinute(it))
-        }.maxBy { it.second.second }
+        val stuff = sleepTimes
+            .keys
+            .map {
+                Pair(it, findMostSleptMinute(it))
+            }
+            .maxBy { it.second.second }
         println("superfrequent = $stuff")
         val id = stuff?.first ?: error("broken")
         val minute = stuff.second.first.second
@@ -102,34 +99,24 @@ object Timetable {
 }
 
 data class LogbookEntry(val month: Int, val day: Int, val hour: Int, val minute: Int, val body: String) {
-    val shiftReg = ".+#(\\d+).+".toRegex()
-    fun shift(): Int? {
-        return shiftReg.matchEntire(body)?.destructured?.let {
-                (i) -> println(i); i.toInt()
-        }
+    companion object {
+        val sleepReg = "falls".toRegex()
+        val wakeReg = "wakes".toRegex()
+        val shiftReg = ".+#(\\d+).+".toRegex()
     }
 
-    val sleepReg = "falls".toRegex()
-    fun sleep(): Boolean {
-        return sleepReg.containsMatchIn(body)
-    }
-
-    val wakeReg = "wakes".toRegex()
-    fun wake(): Boolean {
-        return wakeReg.containsMatchIn(body)
-    }
+    fun shift() = shiftReg.matchEntire(body)?.destructured?.let { (i) -> i.toInt() }
 
     fun getMessageBody(): MessageBody {
-        val shift = shift()
-        if(shift != null) return ShiftMessage(shift)
-        if(sleep()) return SleepMessage()
-        if(wake()) return WakeMessage()
-        error("Unreachable: $body")
+        if(sleepReg.containsMatchIn(body)) return SleepMessage
+        if(wakeReg.containsMatchIn(body)) return WakeMessage
+        shift()?.let {
+            return ShiftMessage(it)
+        }
     }
-
 }
 
 sealed class MessageBody
 class ShiftMessage(val guardId: Int): MessageBody()
-class SleepMessage: MessageBody()
-class WakeMessage: MessageBody()
+object SleepMessage : MessageBody()
+object WakeMessage : MessageBody()
