@@ -5,7 +5,8 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 fun main(args: Array<String>) {
-    println("Part 1: ${partOne()}")
+    print("Part 1: ")
+    partOne()
     println("Part 2: ${partTwo()}")
 }
 
@@ -60,7 +61,6 @@ object Timetable {
     }
 
     fun getMostSleepingGuard(): Int { //returns the ID of the elf.
-        println(sleepTimes)
         val most = sleepTimes.toList().sortedByDescending { a ->
             val sleeptimes = a.second
             val seconds = sleeptimes.map {
@@ -96,7 +96,7 @@ object Timetable {
                 Pair(it, findMostSleptMinute(it))
             }
             .maxBy { it.second.second }
-        println("superfrequent = $stuff")
+        println("Highest Frequency Sleeper is $stuff")
         val id = stuff?.first ?: error("broken")
         val minute = stuff.second.first.second
         return id * minute
